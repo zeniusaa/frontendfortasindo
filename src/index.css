@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html.dark body {
+    @apply bg-slate-950 text-slate-100 min-h-screen selection:bg-cyan-500 selection:text-white transition-colors duration-200;
+  }
+
+  html.light body {
+    @apply bg-slate-100 text-slate-900 min-h-screen selection:bg-cyan-500 selection:text-white transition-colors duration-200;
+  }
+}
+
+/* Custom scrollbars for Dark & Light modes */
+html.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+}
