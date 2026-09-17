@@ -8,6 +8,38 @@ import {
 } from "lucide-react";
 import api from "../api/client";
 
+const detailFieldNames = [
+  "pumpType", "pumpTagNumber", "pumpModelSerialNumber", "pumpManufacturer",
+  "connectionType", "capacity", "serviceFluids", "rpm", "yearInstalled",
+  "driver", "driverManufacturer", "driverTagNumber", "driverModelSerialNumber",
+  "driverFrameSize", "driverPower", "driverVoltage", "driverAmpere", "driverYearInstalled",
+];
+
+const detailGroups = [
+  {
+    title: "Detail Pompa",
+    fields: [
+      ["pumpType", "Pump Type"], ["pumpTagNumber", "Tag Number"],
+      ["pumpModelSerialNumber", "Model / Serial Number"], ["pumpManufacturer", "Merek / Manufacture"],
+      ["connectionType", "Connection Type"], ["capacity", "Capacity"],
+      ["serviceFluids", "Service Fluids"], ["rpm", "RPM", "number"],
+      ["yearInstalled", "Year Installed", "number"],
+    ],
+  },
+  {
+    title: "Detail Driver",
+    fields: [
+      ["driver", "Driver"], ["driverManufacturer", "Merek / Manufacture"],
+      ["driverTagNumber", "Tag Number"], ["driverModelSerialNumber", "Model / Serial Number"],
+      ["driverFrameSize", "Frame Size"], ["driverPower", "Power (kW)", "number"],
+      ["driverVoltage", "Volt (V)", "number"], ["driverAmpere", "Ampere (A)", "number"],
+      ["driverYearInstalled", "Year Installed", "number"],
+    ],
+  },
+];
+
+const emptyDetailFields = Object.fromEntries(detailFieldNames.map((field) => [field, ""]));
+
 export default function PumpFormModal({
   isOpen,
   onClose,
@@ -15,6 +47,7 @@ export default function PumpFormModal({
   initialData = null,
   defaultProjectId = null,
   projects = [],
+  onToggleActive = null,
 }) {
   const [
     formData,
@@ -36,6 +69,7 @@ export default function PumpFormModal({
       "",
     powerFactor:
       "0.85",
+    ...emptyDetailFields,
   });
   const [
     loading,
@@ -95,6 +129,10 @@ export default function PumpFormModal({
             initialData.powerFactor ||
               "0.85",
           ),
+        ...Object.fromEntries(detailFieldNames.map((field) => [
+          field,
+          initialData[field] == null ? "" : String(initialData[field]),
+        ])),
       });
     } else {
       setFormData({
@@ -119,6 +157,7 @@ export default function PumpFormModal({
           "",
         powerFactor:
           "0.85",
+        ...emptyDetailFields,
       });
     }
   }, [
@@ -187,6 +226,7 @@ export default function PumpFormModal({
               formData.powerFactor ||
                 0.85,
             ),
+          ...Object.fromEntries(detailFieldNames.map((field) => [field, formData[field]])),
         };
 
       try {
@@ -227,7 +267,7 @@ export default function PumpFormModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative my-8">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-3xl p-6 shadow-2xl relative my-8">
         <button
           onClick={
             onClose
@@ -354,6 +394,29 @@ export default function PumpFormModal({
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3.5 py-2 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-cyan-500"
             />
           </div>
+
+          {detailGroups.map((group) => (
+            <div key={group.title} className="pt-2 border-t border-slate-200/80 dark:border-slate-800/80">
+              <p className="text-[11px] font-semibold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider mb-3">
+                {group.title}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {group.fields.map(([name, label, type = "text"]) => (
+                  <div key={name}>
+                    <label className="block text-xs text-slate-700 dark:text-slate-300 mb-1">{label}</label>
+                    <input
+                      type={type}
+                      step={type === "number" ? "any" : undefined}
+                      name={name}
+                      value={formData[name]}
+                      onChange={handleChange}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
 
           {/* Technical Nameplate Rating Section */}
           <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800/80">
@@ -502,7 +565,17 @@ export default function PumpFormModal({
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+          <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+            {initialData && onToggleActive ? (
+              <button
+                type="button"
+                onClick={onToggleActive}
+                className={`px-4 py-2 text-xs font-semibold rounded-lg border transition-colors ${initialData.isActive ? "text-rose-700 border-rose-200 hover:bg-rose-50 dark:text-rose-300 dark:border-rose-900 dark:hover:bg-rose-950/30" : "text-emerald-700 border-emerald-200 hover:bg-emerald-50 dark:text-emerald-300 dark:border-emerald-900 dark:hover:bg-emerald-950/30"}`}
+              >
+                {initialData.isActive ? "Nonaktifkan Pompa" : "Aktifkan Pompa"}
+              </button>
+            ) : <span />}
+            <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={
@@ -525,6 +598,7 @@ export default function PumpFormModal({
                   ? "Update Spesifikasi"
                   : "Simpan Alat"}
             </button>
+            </div>
           </div>
         </form>
       </div>

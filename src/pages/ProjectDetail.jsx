@@ -20,6 +20,8 @@ import {
 import api from "../api/client";
 import PumpFormModal from "../components/PumpFormModal";
 import HealthScoreCard from "../components/HealthScoreCard";
+import HealthDistributionChart from "../components/HealthDistributionChart";
+import { getHealthStatus, noHealthStatus } from "../utils/healthStatus";
 
 export default function ProjectDetail() {
   const { id } =
@@ -112,6 +114,12 @@ export default function ProjectDetail() {
     );
   }
 
+  const projectPumps = project.pumps || [];
+  const pumpsWithReading = projectPumps.filter((pump) => pump.readings?.[0]);
+  const criticalPumps = pumpsWithReading.filter((pump) => getHealthStatus(pump.readings[0].healthScore)?.key === "critical").length;
+  const healthyPumps = pumpsWithReading.filter((pump) => ["excellent", "good"].includes(getHealthStatus(pump.readings[0].healthScore)?.key)).length;
+  const projectHealth = project.stats.healthDataCount ? getHealthStatus(project.stats.avgHealthScore) : noHealthStatus;
+
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
       {/* Back Button & Header */}
@@ -176,7 +184,7 @@ export default function ProjectDetail() {
       </div>
 
       {/* Project Statistics Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex items-center gap-4 shadow-sm">
           <div className="p-3.5 bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 rounded-xl">
             <Gauge className="w-6 h-6" />
@@ -198,8 +206,8 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex items-center gap-4 shadow-sm">
-          <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl">
+        <div className={`bg-white dark:bg-slate-900 border rounded-2xl p-5 flex items-center gap-4 shadow-sm ${projectHealth.panelClass}`}>
+          <div className={`p-3.5 rounded-xl border ${projectHealth.badgeClass}`}>
             <Activity className="w-6 h-6" />
           </div>
           <div>
@@ -209,11 +217,11 @@ export default function ProjectDetail() {
               Alat
             </p>
             <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              <p className={`text-2xl font-bold ${projectHealth.textClass}`}>
                 {
                   project
                     .stats
-                    .avgHealthScore
+                    .healthDataCount ? project.stats.avgHealthScore : "—"
                 }
               </p>
               <span className="text-xs text-slate-500 dark:text-slate-400">
@@ -221,6 +229,7 @@ export default function ProjectDetail() {
                 100
               </span>
             </div>
+            <span className={`inline-flex mt-1 text-[10px] font-semibold px-2 py-0.5 rounded border ${projectHealth.badgeClass}`}>{projectHealth.label}</span>
           </div>
         </div>
 
@@ -243,7 +252,29 @@ export default function ProjectDetail() {
             </p>
           </div>
         </div>
+
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex items-center gap-4 shadow-sm">
+          <div className="p-3.5 bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 rounded-xl">
+            <ShieldCheck className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Excellent & Good</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{healthyPumps} <span className="text-xs text-slate-500 font-medium">Unit</span></p>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex items-center gap-4 shadow-sm">
+          <div className="p-3.5 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Critical</p>
+            <p className="text-2xl font-bold text-rose-600 dark:text-rose-400">{criticalPumps} <span className="text-xs text-slate-500 font-medium">Unit</span></p>
+          </div>
+        </div>
       </div>
+
+      <HealthDistributionChart pumps={projectPumps} title="Analisis Status Kesehatan Proyek" />
 
       {/* Pumps List Section */}
       <div className="space-y-4">

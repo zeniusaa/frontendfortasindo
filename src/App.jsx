@@ -15,6 +15,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ProjectDetail from "./pages/ProjectDetail";
 import PumpsList from "./pages/PumpsList";
+import ProjectsList from "./pages/ProjectsList";
 import PumpDetail from "./pages/PumpDetail";
 
 // Protected Layout with Left Sidebar
@@ -43,7 +44,7 @@ function ProtectedLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="flex min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* Navbar / Navigation Sidebar on the Left */}
       <Sidebar />
 
@@ -59,7 +60,7 @@ function ProtectedLayout() {
           <Route
             path="/projects"
             element={
-              <Dashboard />
+              <ProjectsList />
             }
           />
           <Route

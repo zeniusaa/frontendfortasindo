@@ -9,11 +9,24 @@ export default {
     extend: {
       colors: {
         brand: {
-          50: '#f0f7ff',
-          100: '#e0effe',
-          500: '#0284c7',
-          600: '#0369a1',
-          700: '#075985',
+          lime: '#56D52C',
+          teal: '#0AAE9A',
+          cyan: '#0878C9',
+          cobalt: '#063EB8',
+          white: '#FFFFFF',
+          ink: '#101828',
+        },
+        // Mengganti aksen cyan/blue lama tanpa mengubah warna status kesehatan.
+        cyan: {
+          400: '#0AAE9A',
+          500: '#0878C9',
+          600: '#063EB8',
+          700: '#063EB8',
+          950: '#101828',
+        },
+        blue: {
+          500: '#0878C9',
+          600: '#063EB8',
         },
       },
     },

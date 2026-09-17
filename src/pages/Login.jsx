@@ -3,7 +3,6 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Activity,
   Lock,
   Mail,
   ArrowRight,
@@ -73,22 +72,24 @@ export default function Login() {
     };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background glow effects */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="min-h-screen brand-login-background flex items-center justify-center p-4 relative overflow-hidden">
       <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-2xl relative z-10">
         {/* Header Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex p-3 bg-gradient-to-tr from-cyan-600 to-blue-600 rounded-2xl shadow-lg shadow-cyan-500/30 text-white mb-3">
-            <Activity className="w-8 h-8 animate-pulse" />
+          <div className="h-[180px] flex items-center justify-center">
+            <img
+              src="/brand/fortasindo-logo-horizontal.png"
+              alt="Fortasindo"
+              className="h-[256px] w-full object-contain"
+            />
           </div>
+
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
             Pump
             Monitoring
             System
           </h1>
+
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Masuk
             untuk
@@ -181,7 +182,7 @@ export default function Login() {
             disabled={
               loading
             }
-            className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-cyan-600/25 flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3 brand-gradient text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-cyan-600/25 hover:brightness-110 flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? (
               "Memproses..."

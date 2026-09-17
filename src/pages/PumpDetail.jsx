@@ -18,6 +18,8 @@ import {
   Layers,
   AlertTriangle,
   CheckCircle2,
+  ImagePlus,
+  Trash2,
 } from "lucide-react";
 import api from "../api/client";
 import HealthScoreCard from "../components/HealthScoreCard";
@@ -62,6 +64,9 @@ export default function PumpDetail() {
     setIsReadingModalOpen,
   ] =
     useState(false);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  const [photoError, setPhotoError] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
   useEffect(() => {
     fetchPumpData();
@@ -110,6 +115,57 @@ export default function PumpDetail() {
         );
       }
     };
+
+  const uploadPhotos = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+    setIsUploadingPhotos(true);
+    setPhotoError(null);
+    const formData = new FormData();
+    files.forEach((file) => formData.append("photos", file));
+    try {
+      await api.post(`/pumps/${id}/photos`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      await fetchPumpData();
+    } catch (err) {
+      setPhotoError(err.response?.data?.error || "Gagal mengunggah foto asset.");
+    } finally {
+      setIsUploadingPhotos(false);
+      event.target.value = "";
+    }
+  };
+
+  const deletePhoto = async (photoId) => {
+    if (!window.confirm("Hapus foto asset ini secara permanen?")) return;
+    try {
+      await api.delete(`/pumps/${id}/photos/${photoId}`);
+      await fetchPumpData();
+    } catch (err) {
+      setActionError(err.response?.data?.error || "Gagal menghapus foto asset.");
+    }
+  };
+
+  const deleteReading = async (readingId) => {
+    if (!window.confirm("Hapus pembacaan ini secara permanen?")) return;
+    try {
+      await api.delete(`/pumps/${id}/readings/${readingId}`);
+      await fetchPumpData();
+    } catch (err) {
+      setActionError(err.response?.data?.error || "Gagal menghapus pembacaan.");
+    }
+  };
+
+  const togglePumpActive = async () => {
+    const action = pump.isActive ? "nonaktifkan" : "aktifkan";
+    if (!window.confirm(`Yakin ingin ${action} pompa ini?`)) return;
+    try {
+      await api.patch(`/pumps/${id}/${pump.isActive ? "deactivate" : "activate"}`);
+      await fetchPumpData();
+    } catch (err) {
+      setActionError(err.response?.data?.error || "Gagal mengubah status pompa.");
+    }
+  };
 
   if (loading) {
     return (
@@ -165,6 +221,29 @@ export default function PumpDetail() {
       bepZone,
       healthScore,
     );
+  const equipmentDetails = [
+    {
+      title: "Detail Pompa",
+      values: [
+        ["Pump Type", pump.pumpType], ["Tag Number", pump.pumpTagNumber],
+        ["Model / Serial Number", pump.pumpModelSerialNumber], ["Merek / Manufacture", pump.pumpManufacturer],
+        ["Connection Type", pump.connectionType], ["Capacity", pump.capacity],
+        ["Service Fluids", pump.serviceFluids], ["RPM", pump.rpm],
+        ["Year Installed", pump.yearInstalled],
+      ],
+    },
+    {
+      title: "Detail Driver",
+      values: [
+        ["Driver", pump.driver], ["Merek / Manufacture", pump.driverManufacturer],
+        ["Tag Number", pump.driverTagNumber], ["Model / Serial Number", pump.driverModelSerialNumber],
+        ["Frame Size", pump.driverFrameSize], ["Power", pump.driverPower == null ? null : `${pump.driverPower} kW`],
+        ["Volt", pump.driverVoltage == null ? null : `${pump.driverVoltage} V`],
+        ["Ampere", pump.driverAmpere == null ? null : `${pump.driverAmpere} A`],
+        ["Year Installed", pump.driverYearInstalled],
+      ],
+    },
+  ];
 
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
@@ -252,7 +331,18 @@ export default function PumpDetail() {
         </div>
       </div>
 
-      {/* Main Grid Section */}
+      {/* Informasi primer: pompa, driver, dan kesehatan selalu muncul dahulu. */}
+      <section className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {equipmentDetails.map((section) => (
+          <div key={section.title} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3"><Info className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />{section.title}</h2>
+            <div className="space-y-3 text-xs">{section.values.map(([label, value]) => <div key={label} className="flex justify-between gap-4 py-1.5 border-b last:border-0 border-slate-200/60 dark:border-slate-800/60"><span className="text-slate-500 dark:text-slate-400">{label}</span><span className="font-semibold text-right text-slate-800 dark:text-slate-200">{value ?? "â€”"}</span></div>)}</div>
+          </div>
+        ))}
+        <HealthScoreCard score={latestReading?.healthScore} bepZone={latestReading?.bepZone} issues={latestReading?.issues} />
+      </section>
+
+      {/* Informasi pendukung dan analisis */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Full Description & Specifications */}
         <div className="space-y-6">
@@ -345,8 +435,25 @@ export default function PumpDetail() {
             </div>
           </div>
 
+          {false && equipmentDetails.map((section) => (
+            <div key={section.title} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+                <Info className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                {section.title}
+              </h3>
+              <div className="space-y-3 text-xs">
+                {section.values.map(([label, value]) => (
+                  <div key={label} className="flex justify-between gap-4 py-1.5 border-b last:border-0 border-slate-200/60 dark:border-slate-800/60">
+                    <span className="text-slate-500 dark:text-slate-400">{label}</span>
+                    <span className="font-semibold text-right text-slate-800 dark:text-slate-200">{value ?? "—"}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
           {/* Health Score Summary Card */}
-          <HealthScoreCard
+          {false && <HealthScoreCard
             score={
               latestReading?.healthScore
             }
@@ -356,7 +463,7 @@ export default function PumpDetail() {
             issues={
               latestReading?.issues
             }
-          />
+          />}
         </div>
 
         {/* Right Column: Trend Chart, Latest Reading & Maintenance Advice */}
@@ -367,6 +474,34 @@ export default function PumpDetail() {
               pump.readings
             }
           />
+
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <ImagePlus className="w-4 h-4 text-cyan-600 dark:text-cyan-400" /> Foto Asset
+              </h3>
+              <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg transition-colors">
+                <ImagePlus className="w-3.5 h-3.5" />
+                {isUploadingPhotos ? "Mengunggah..." : "Tambah Foto"}
+                <input type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={isUploadingPhotos} onChange={uploadPhotos} className="hidden" />
+              </label>
+            </div>
+            {(photoError || actionError) && <p className="text-xs text-rose-600 dark:text-rose-400">{photoError || actionError}</p>}
+            {pump.photos?.length ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {pump.photos.map((photo) => (
+                  <div key={photo.id} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 group">
+                    <a href={`http://localhost:3001/uploads/assets/${photo.storedFileName}`} target="_blank" rel="noreferrer" title={photo.caption || photo.originalFileName}>
+                      <img src={`http://localhost:3001/uploads/assets/${photo.storedFileName}`} alt={photo.caption || `Foto ${pump.name}`} className="w-full h-full object-cover" />
+                    </a>
+                    <button onClick={() => deletePhoto(photo.id)} title="Hapus foto" className="absolute top-2 right-2 p-1.5 rounded-lg bg-rose-600 text-white opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500 dark:text-slate-400">Belum ada foto asset. JPEG, PNG, atau WebP; maksimal 10 MB per foto.</p>
+            )}
+          </div>
 
           {/* Fault Diagnosis & Actionable Repairs Section */}
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
@@ -586,6 +721,28 @@ export default function PumpDetail() {
               </div>
             )}
           </div>
+
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+              <Calendar className="w-4 h-4 text-cyan-600 dark:text-cyan-400" /> Histori Pembacaan
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                  <tr><th className="py-2 pr-3">Waktu</th><th className="py-2 pr-3">Flow</th><th className="py-2 pr-3">Suction / Discharge</th><th className="py-2 pr-3">Arus</th><th className="py-2 pr-3">Vibrasi</th><th className="py-2 pr-3">Suhu</th><th className="py-2 pr-3">Health</th><th className="py-2 pr-3">Status</th><th className="py-2">Aksi</th></tr>
+                </thead>
+                <tbody>
+                  {pump.readings?.map((reading) => (
+                    <tr key={reading.id} className="border-b border-slate-100 dark:border-slate-800/70 text-slate-700 dark:text-slate-300">
+                      <td className="py-3 pr-3 whitespace-nowrap">{new Date(reading.createdAt).toLocaleString("id-ID")}</td><td className="py-3 pr-3">{reading.flowRate} m³/h</td><td className="py-3 pr-3 whitespace-nowrap">{reading.suctionPressure} / {reading.dischargePressure} bar</td><td className="py-3 pr-3">{reading.current} A</td><td className="py-3 pr-3">{reading.vibration} mm/s</td><td className="py-3 pr-3">{reading.temperature} °C</td><td className="py-3 pr-3 font-semibold">{reading.healthScore ?? "—"}</td><td className="py-3 pr-3">{reading.healthStatus?.label ?? "—"}</td>
+                      <td className="py-3"><button onClick={() => deleteReading(reading.id)} title="Hapus pembacaan" className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"><Trash2 className="w-3.5 h-3.5" /></button></td>
+                    </tr>
+                  ))}
+                  {!pump.readings?.length && <tr><td colSpan="9" className="py-6 text-center text-slate-500">Belum ada histori pembacaan.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -608,6 +765,7 @@ export default function PumpDetail() {
         onSuccess={() =>
           fetchPumpData()
         }
+        onToggleActive={togglePumpActive}
       />
 
       {/* Input Reading Modal */}

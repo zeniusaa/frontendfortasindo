@@ -4,45 +4,13 @@ import {
   ShieldCheck,
   AlertTriangle,
 } from "lucide-react";
+import { getHealthStatus, noHealthStatus } from "../utils/healthStatus";
 
 export default function HealthScoreCard({
   score,
   bepZone,
   issues = [],
 }) {
-  const getScoreColor =
-    (val) => {
-      if (
-        val == null
-      )
-        return {
-          bg: "bg-slate-100 dark:bg-slate-800",
-          text: "text-slate-500 dark:text-slate-400",
-          border:
-            "border-slate-300 dark:border-slate-700",
-        };
-      if (val >= 80)
-        return {
-          bg: "bg-emerald-500/10",
-          text: "text-emerald-600 dark:text-emerald-400",
-          border:
-            "border-emerald-500/30",
-        };
-      if (val >= 60)
-        return {
-          bg: "bg-amber-500/10",
-          text: "text-amber-600 dark:text-amber-400",
-          border:
-            "border-amber-500/30",
-        };
-      return {
-        bg: "bg-rose-500/10",
-        text: "text-rose-600 dark:text-rose-400",
-        border:
-          "border-rose-500/30",
-      };
-    };
-
   const getZoneLabel =
     (zone) => {
       switch (
@@ -86,10 +54,7 @@ export default function HealthScoreCard({
       }
     };
 
-  const style =
-    getScoreColor(
-      score,
-    );
+  const healthStatus = getHealthStatus(score) || noHealthStatus;
   const zoneStyle =
     getZoneLabel(
       bepZone,
@@ -97,7 +62,7 @@ export default function HealthScoreCard({
 
   return (
     <div
-      className={`p-4 rounded-xl border ${style.border} ${style.bg} transition-all`}
+      className={`p-4 rounded-xl border ${healthStatus.panelClass} transition-all`}
     >
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -105,7 +70,7 @@ export default function HealthScoreCard({
           Kesehatan
           Alat
         </span>
-        {score >=
+        {score == null ? <ShieldAlert className="w-5 h-5 text-slate-400" /> : score >=
         80 ? (
           <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
         ) : score >=
@@ -118,7 +83,7 @@ export default function HealthScoreCard({
 
       <div className="mt-2 flex items-baseline gap-2">
         <span
-          className={`text-3xl font-bold tracking-tight ${style.text}`}
+          className={`text-3xl font-bold tracking-tight ${healthStatus.textClass}`}
         >
           {score !=
           null
@@ -127,6 +92,12 @@ export default function HealthScoreCard({
         </span>
         <span className="text-xs text-slate-500 dark:text-slate-400">
           / 100
+        </span>
+      </div>
+
+      <div className="mt-2">
+        <span className={`inline-flex text-[11px] font-semibold px-2.5 py-1 rounded-md border ${healthStatus.badgeClass}`}>
+          {healthStatus.label}
         </span>
       </div>
 

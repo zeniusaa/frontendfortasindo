@@ -3,25 +3,38 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --brand-lime: #56D52C;
+    --brand-teal: #0AAE9A;
+    --brand-cyan: #0878C9;
+    --brand-cobalt: #063EB8;
+    --brand-white: #FFFFFF;
+    --brand-ink: #101828;
+    --brand-gradient: linear-gradient(110deg, #56D52C 0%, #0AAE9A 30%, #0878C9 62%, #063EB8 100%);
+  }
+
   html.dark body {
-    @apply bg-slate-950 text-slate-100 min-h-screen selection:bg-cyan-500 selection:text-white transition-colors duration-200;
+    @apply text-slate-100 min-h-screen selection:bg-cyan-500 selection:text-white transition-colors duration-200;
+    /* Surface gelap tetap memakai kontras slate yang terbukti stabil. */
+    background-color: #020617;
   }
 
   html.light body {
-    @apply bg-slate-100 text-slate-900 min-h-screen selection:bg-cyan-500 selection:text-white transition-colors duration-200;
+    @apply text-slate-900 min-h-screen selection:bg-cyan-500 selection:text-white transition-colors duration-200;
+    background-color: var(--brand-white);
   }
 }
 
 /* Custom scrollbars for Dark & Light modes */
 html.dark ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #020617;
 }
 html.dark ::-webkit-scrollbar-thumb {
   background: #334155;
 }
 
 html.light ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #FFFFFF;
 }
 html.light ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
@@ -33,4 +46,15 @@ html.light ::-webkit-scrollbar-thumb {
 }
 ::-webkit-scrollbar-thumb {
   border-radius: 4px;
+  background: #0AAE9A;
+}
+
+.brand-gradient {
+  background-image: var(--brand-gradient);
+}
+
+.brand-login-background {
+  background-image: url('/brand/fortasindo-background.png');
+  background-position: center;
+  background-size: cover;
 }

@@ -21,6 +21,7 @@ import {
   Tooltip,
 } from "recharts";
 import { useTheme } from "../context/ThemeContext";
+import { getHealthDistribution } from "../utils/healthStatus";
 
 export default function Dashboard() {
   const [
@@ -107,12 +108,7 @@ export default function Dashboard() {
               0),
           0,
         );
-  const projectsWithHealth =
-    projects.filter(
-      (p) =>
-        p.avgHealthScore >
-        0,
-    );
+  const projectsWithHealth = projects.filter((p) => p.healthDataCount > 0);
   const globalAvgHealth =
     projectsWithHealth.length >
     0
@@ -131,37 +127,13 @@ export default function Dashboard() {
         ) / 10
       : 0;
 
-  // Pie chart data for Health Category
-  const optimalProjects =
-    projects.filter(
-      (p) =>
-        p.avgHealthScore >=
-        80,
-    ).length;
-  const warningProjects =
-    projects.filter(
-      (p) =>
-        p.avgHealthScore >=
-          60 &&
-        p.avgHealthScore <
-          80,
-    ).length;
-  const dangerProjects =
-    projects.filter(
-      (p) =>
-        p.avgHealthScore <
-          60 &&
-        p.avgHealthScore >
-          0,
-    ).length;
-  const noDataProjects =
-    projects.filter(
-      (p) =>
-        p.avgHealthScore ===
-        0,
-    ).length;
+  // Distribusi lima status dari health score pembacaan terakhir pompa.
+  const optimalProjects = 0;
+  const warningProjects = 0;
+  const dangerProjects = 0;
+  const noDataProjects = 0;
 
-  const pieData = [
+  const legacyPieData = [
     {
       name: "Kesehatan Optimal (≥80)",
       value:
@@ -195,6 +167,9 @@ export default function Dashboard() {
       item.value >
       0,
   );
+  const pieData = getHealthDistribution(
+    pumps.map((pump) => pump.readings?.[0]?.healthScore),
+  );
 
   return (
     <div className="p-8 space-y-8 max-w-7xl mx-auto">
@@ -216,21 +191,6 @@ export default function Dashboard() {
             alat
           </p>
         </div>
-        <button
-          onClick={() =>
-            setIsProjectModalOpen(
-              true,
-            )
-          }
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-cyan-600/20 transition-all self-start md:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>
-            Tambah
-            Proyek
-            Baru
-          </span>
-        </button>
       </div>
 
       {/* Global Stat Cards */}
@@ -296,32 +256,19 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Unhealthy Tools Alert & Recommended Actions Section */}
-      {!loading && (
-        <UnhealthyToolsAlert
-          pumps={
-            pumps
-          }
-        />
-      )}
-
       {/* Visual Diagram Section */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
         <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">
           Distribusi
           Status
           Kesehatan
-          Proyek
+          Pompa
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
           Grafik
           diagram
           persentase
-          kondisi
-          proyek
-          yang
-          sedang
-          berjalan
+          kondisi kesehatan seluruh pompa berdasarkan pembacaan terakhir.
         </p>
 
         {pieData.length >
@@ -333,6 +280,9 @@ export default function Dashboard() {
                 height="100%"
               >
                 <PieChart>
+                  <Pie data={pieData} cx="50%" cy="54%" innerRadius={50} outerRadius={80} dataKey="value" stroke="none">
+                    {pieData.map((entry, index) => <Cell key={`depth-${index}`} fill={entry.darkColor} />)}
+                  </Pie>
                   <Pie
                     data={
                       pieData
@@ -418,7 +368,7 @@ export default function Dashboard() {
                       {
                         item.value
                       }{" "}
-                      Proyek
+                      Unit
                     </span>
                   </div>
                 ),
@@ -438,6 +388,7 @@ export default function Dashboard() {
         )}
       </div>
 
+      {false && (<>
       {/* Projects Section */}
       <div>
         <div className="flex items-center justify-between mb-4">
@@ -584,6 +535,14 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+      </>)}
+
+      {/* Unhealthy Tools Alert & Recommended Actions Section */}
+      {!loading && (
+        <UnhealthyToolsAlert
+          pumps={pumps}
+        />
+      )}
 
       {/* Modal Form Tambah Proyek */}
       <ProjectFormModal
